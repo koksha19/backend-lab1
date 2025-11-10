@@ -1,40 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-
-export type User = { id: number; name: string };
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateUserDto } from '../dto/user.dto';
 
 @Injectable()
-export class UsersService {
-  private users: User[] = [];
-  private nextId = 1;
+export class UserService {
+  constructor(private prisma: PrismaService) {}
 
-  create(name: string): User {
-    const user = { id: this.nextId++, name };
-    this.users.push(user);
+  create(dto: CreateUserDto) {
+    return this.prisma.user.create({ data: dto });
+  }
 
+  findAll() {
+    return this.prisma.user.findMany();
+  }
+
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
-  findAll(): User[] {
-    return this.users;
-  }
-
-  findOne(id: number): User {
-    const user = this.users.find((user) => user.id === id);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
-  }
-
-  remove(id: number): void {
-    const index = this.users.findIndex((x) => x.id === id);
-
-    if (index === -1) {
-      throw new NotFoundException('User not found');
-    }
-
-    this.users.splice(index, 1);
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.user.delete({ where: { id } });
   }
 }
+
