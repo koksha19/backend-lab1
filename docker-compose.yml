@@ -1,26 +1,31 @@
 version: '3.9'
 
 services:
+  app:
+    build: .
+    container_name: backend-lab1-app
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+    command: >
+      sh -c "npx prisma migrate deploy && node dist/src/main.js"
+
   db:
     image: postgres:16-alpine
+    container_name: backend-lab1-db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: expenses
+      POSTGRES_DB: postgres
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-
-  app:
-    build: .
-    ports:
-      - '3000:3000'
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/expenses
-    depends_on:
-      - db
 
 volumes:
   pgdata:
