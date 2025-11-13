@@ -7,7 +7,8 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  create(@Body() dto: CreateCategoryDto) {
+  create(@Body() dto: CreateCategoryDto, @Query('user_id') userId?: string) {
+    if (userId) dto.userId = +userId;
     return this.categoryService.create(dto);
   }
 
