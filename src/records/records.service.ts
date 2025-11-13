@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecordDto } from '../dto/record.dto';
+import { NotFoundCustomException } from "../exceptions/not-found.exception";
+import { BadRequestCustomException } from "../exceptions/bad-request.exception";
 
 @Injectable()
 export class RecordService {
@@ -8,23 +10,29 @@ export class RecordService {
 
   async create(dto: CreateRecordDto) {
     const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+    if (!user) throw new NotFoundCustomException('User', dto.userId);
+
     const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
+    if (!category) throw new NotFoundCustomException('Category', dto.categoryId);
 
-    if (!user) throw new NotFoundException('User not found');
-    if (!category) throw new NotFoundException('Category not found');
-
-    return this.prisma.record.create({ data: dto });
+    try {
+      return await this.prisma.record.create({ data: dto });
+    } catch (error) {
+      throw new BadRequestCustomException('Failed to create record');
+    }
   }
 
   async findOne(id: number) {
     const record = await this.prisma.record.findUnique({ where: { id } });
-    if (!record) throw new NotFoundException('Record not found');
+    if (!record) throw new NotFoundCustomException('Record', id);
+
     return record;
   }
 
   async findFiltered(userId?: number, categoryId?: number) {
-    if (!userId && !categoryId)
-      throw new BadRequestException('You must provide user_id or category_id');
+    if (!userId && !categoryId) {
+      throw new BadRequestCustomException('You must provide user_id or category_id');
+    }
 
     return this.prisma.record.findMany({
       where: {
@@ -35,7 +43,10 @@ export class RecordService {
   }
 
   async remove(id: number) {
-    await this.findOne(id);
-    return this.prisma.record.delete({ where: { id } });
+    const record = await this.prisma.record.findUnique({ where: { id } });
+    if (!record) throw new NotFoundCustomException('Record', id);
+
+    await this.prisma.record.delete({ where: { id } });
+    return { message: `Record with id=${id} deleted successfully` };
   }
 }
