@@ -12,10 +12,12 @@ import { RecordController } from "./records/records.controller";
 import { CategoryController } from "./categories/categories.controller";
 import { RecordService } from "./records/records.service";
 import { CategoryService } from "./categories/categories.service";
+import { AuthController } from "./auth/auth.controller";
+import { AuthService } from "./auth/auth.service";
 
 @Module({
   imports: [UsersModule, CategoriesModule, RecordsModule, PrismaModule],
-  controllers: [AppController, UserController, CategoryController, RecordController],
-  providers: [AppService, UserService, PrismaService, CategoryService, RecordService],
+  controllers: [AppController, UserController, CategoryController, RecordController, AuthController],
+  providers: [AppService, UserService, PrismaService, CategoryService, RecordService, AuthService],
 })
 export class AppModule {}
